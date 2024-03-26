@@ -23,6 +23,7 @@ public class Bluck implements AM {
         int maxWorkers = 4;
         point[] ps = new point[maxWorkers];
         channel[] cs = new channel[maxWorkers];
+        int step=n/maxWorkers+1;
         for (int i = 0; i < maxWorkers; i += 1) {
             point p = info.createPoint();
             channel c = p.createChannel();
@@ -33,11 +34,33 @@ public class Bluck implements AM {
             }*/
             c.write(n);
             c.write(a);
-
+            c.write(step*i);
+            c.write(step*i+step);
             ps[i] = p;
             cs[i] = c;
         }
+        
+        ArrayList<Double> x=new ArrayList<Double>();
+        for(int i=0;i<n;i++)x.add(0.0);
+        for(int t=1;t<=n;t++){
 
+        
+        for(int i=0;i<maxWorkers;i+=1){
+            cs[i].write(x);
+        }
+        ArrayList<ArrayList<Double>> ans= new ArrayList<ArrayList<Double>>();
+        for(int i=0;i<maxWorkers;i+=1){
+            ans.add((ArrayList<Double>)cs[i].readObject());
+        }
+        ArrayList<Double> newx= new ArrayList<>();
+        for (ArrayList<Double> q :ans) {
+            for (double xx : q) {
+                newx.add(xx);
+            }
+        }
+        x=newx;
+    }
+    for(int i=0;i<n;i++)System.out.print(x.get(i).toString()+" ");
         /*ArrayList<byte[]> t = new ArrayList<>();
         for(int i = 0; i < maxWorkers; i += 1) {
             ArrayList<Byte> res = (ArrayList<Byte>)cs[i].readObject();
@@ -56,9 +79,25 @@ public class Bluck implements AM {
     }
 
     public void run(AMInfo info) {
-            int n = (int)info.parent.readObject();
+            int n = info.parent.readInt();
             ArrayList<ArrayList<Integer>> a=(ArrayList<ArrayList<Integer>>)info.parent.readObject();
-            System.out.println(n);
+            int l= info.parent.readInt();
+            int r=info.parent.readInt();
+            if(l>=n)l=n-1;
+            if(r>n)r=n;
+            for(int t=1;t<=n;t++){
+                ArrayList<Double> x=(ArrayList<Double>)info.parent.readObject();
+                ArrayList<Double> xnew=new ArrayList<Double>();
+                for(int k=l;k<r;k++){
+                    xnew.add((double)a.get(k).get(n));
+                    for(int i=0;i<n;i++){
+                        if(i!=k)xnew.set(k-l, xnew.get(k-l)-a.get(k).get(i)*x.get(i));
+                    }
+                    xnew.set(k-l, xnew.get(k-l)/a.get(k).get(k));
+                }
+                
+            info.parent.write(xnew);
+            }
         }
 
         /*System.out.println("Task started with len = " + a.size());
@@ -129,11 +168,11 @@ public class Bluck implements AM {
     public static ArrayList<ArrayList<Integer>> fromFile(String filename) throws Exception {
         Scanner sc = new Scanner(new File(filename));
         int n = sc.nextInt();
-        ArrayList<ArrayList<Integer>> a = new ArrayList<ArrayList<Integer>>(n);
-        for (int i = 0; i < n; i++) 
-        for(int j=0;j<n;j++){
+        ArrayList<ArrayList<Integer>> a = new ArrayList<ArrayList<Integer>>();
+        for (int i = 0; i < n; i++){ a.add(new ArrayList<Integer>());
+        for(int j=0;j<=n;j++){
             a.get(i).add(sc.nextInt());
-        }
+        }}
         return a;
     }
 
